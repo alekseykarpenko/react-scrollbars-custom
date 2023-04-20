@@ -177,19 +177,24 @@ export const calcThumbOffset = (
  * @param {number} trackSize - Track size thumb can move
  * @param {number} thumbSize - Thumb size
  * @param {number} thumbOffset - Thumb's offset representing the scroll
+ * @param reverse - Reverse scrollbar position for reversed flex-direction
  */
 export const calcScrollForThumbOffset = (
   contentSize: number,
   viewportSize: number,
   trackSize: number,
   thumbSize: number,
-  thumbOffset: number
+  thumbOffset: number,
+  reverse?: boolean
 ): number => {
   if (!thumbOffset || !thumbSize || viewportSize >= contentSize) {
-    return 0;
+    return reverse ? viewportSize - contentSize : 0;
   }
 
-  return (thumbOffset * (contentSize - viewportSize)) / (trackSize - thumbSize);
+  // TODO: revere
+  const position = (thumbOffset * (contentSize - viewportSize)) / (trackSize - thumbSize);
+
+  return reverse ? viewportSize - contentSize + position : position;
 };
 
 /**

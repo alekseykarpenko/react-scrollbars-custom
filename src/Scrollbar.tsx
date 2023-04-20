@@ -34,6 +34,8 @@ export type ScrollbarProps = ElementPropsWithElementRefAndRenderer & {
   createContext?: boolean;
 
   rtl?: boolean;
+  reverseY?: boolean;
+  reverseX?: boolean;
 
   momentum?: boolean;
   native?: boolean;
@@ -115,6 +117,8 @@ export default class Scrollbar extends React.Component<ScrollbarProps, Scrollbar
 
   // eslint-disable-next-line react/static-property-placement
   static defaultProps = {
+    reverseY: false,
+    reverseX: false,
     momentum: true,
 
     minimalThumbSize: 30,
@@ -535,8 +539,17 @@ export default class Scrollbar extends React.Component<ScrollbarProps, Scrollbar
 
       scrollState.scrollHeight = this.scrollerElement.scrollHeight;
       scrollState.scrollWidth = this.scrollerElement.scrollWidth;
-      scrollState.scrollTop = this.scrollerElement.scrollTop;
-      scrollState.scrollLeft = this.scrollerElement.scrollLeft;
+
+      scrollState.scrollTop = this.props.reverseY
+        ? this.scrollerElement.scrollHeight -
+          this.scrollerElement.clientHeight +
+          this.scrollerElement.scrollTop
+        : this.scrollerElement.scrollTop;
+      scrollState.scrollLeft = this.props.reverseX
+        ? this.scrollerElement.scrollWidth -
+          this.scrollerElement.clientWidth +
+          this.scrollerElement.scrollLeft
+        : this.scrollerElement.scrollLeft;
 
       scrollState.scrollYPossible =
         !scrollState.scrollYBlocked && scrollState.scrollHeight > scrollState.clientHeight;
@@ -562,7 +575,9 @@ export default class Scrollbar extends React.Component<ScrollbarProps, Scrollbar
    */
   public scrollToTop = (): this => {
     if (this.scrollerElement) {
-      this.scrollerElement.scrollTop = 0;
+      this.scrollerElement.scrollTop = this.props.reverseY
+        ? this.scrollerElement.scrollHeight - this.scrollerElement.clientHeight
+        : 0;
     }
 
     return this;
@@ -573,7 +588,9 @@ export default class Scrollbar extends React.Component<ScrollbarProps, Scrollbar
    */
   public scrollToLeft = (): this => {
     if (this.scrollerElement) {
-      this.scrollerElement.scrollLeft = 0;
+      this.scrollerElement.scrollLeft = this.props.reverseX
+        ? this.scrollerElement.scrollWidth - this.scrollerElement.clientWidth
+        : 0;
     }
 
     return this;
@@ -584,8 +601,9 @@ export default class Scrollbar extends React.Component<ScrollbarProps, Scrollbar
    */
   public scrollToBottom = (): this => {
     if (this.scrollerElement) {
-      this.scrollerElement.scrollTop =
-        this.scrollerElement.scrollHeight - this.scrollerElement.clientHeight;
+      this.scrollerElement.scrollTop = this.props.reverseY
+        ? 0
+        : this.scrollerElement.scrollHeight - this.scrollerElement.clientHeight;
     }
 
     return this;
@@ -596,8 +614,9 @@ export default class Scrollbar extends React.Component<ScrollbarProps, Scrollbar
    */
   public scrollToRight = (): this => {
     if (this.scrollerElement) {
-      this.scrollerElement.scrollLeft =
-        this.scrollerElement.scrollWidth - this.scrollerElement.clientWidth;
+      this.scrollerElement.scrollLeft = this.props.reverseX
+        ? 0
+        : this.scrollerElement.scrollWidth - this.scrollerElement.clientWidth;
     }
 
     return this;
@@ -1192,8 +1211,29 @@ export default class Scrollbar extends React.Component<ScrollbarProps, Scrollbar
       this.scrollValues.clientWidth,
       trackInnerSize,
       thumbSize,
-      thumbOffset
+      thumbOffset,
+      this.props.reverseX
     );
+
+    // TODO: implement reverseX
+    // if (this.props.trackClickBehavior === TRACK_CLICK_BEHAVIOR.JUMP) {
+    //   this.scrollerElement.scrollLeft = target;
+    // } else if (this.props.reverseX) {
+    //   const reversedScrollLeft =
+    //     this.scrollValues.clientWidth -
+    //     this.scrollValues.scrollWidth +
+    //     this.scrollValues.scrollLeft;
+    //
+    //   this.scrollerElement.scrollLeft =
+    //     reversedScrollLeft < target
+    //       ? reversedScrollLeft + this.scrollValues.clientWidth
+    //       : reversedScrollLeft - this.scrollValues.clientWidth;
+    // } else {
+    //   this.scrollerElement.scrollLeft =
+    //     this.scrollValues.scrollLeft < target
+    //       ? this.scrollValues.scrollLeft + this.scrollValues.clientWidth
+    //       : this.scrollValues.scrollLeft - this.scrollValues.clientWidth;
+    // }
 
     if (this.props.trackClickBehavior === TRACK_CLICK_BEHAVIOR.STEP) {
       target = (
@@ -1230,11 +1270,22 @@ export default class Scrollbar extends React.Component<ScrollbarProps, Scrollbar
         this.scrollValues.clientHeight,
         util.getInnerHeight(this.trackYElement),
         thumbSize,
-        values.offset - thumbSize / 2
+        values.offset - thumbSize / 2,
+        this.props.reverseY
       ) - (Number.parseFloat(getComputedStyle(this.trackYElement).paddingTop) || 0);
 
     if (this.props.trackClickBehavior === TRACK_CLICK_BEHAVIOR.JUMP) {
       this.scrollerElement.scrollTop = target;
+    } else if (this.props.reverseY) {
+      const reversedScrollTop =
+        this.scrollValues.clientHeight -
+        this.scrollValues.scrollHeight +
+        this.scrollValues.scrollTop;
+
+      this.scrollerElement.scrollTop =
+        reversedScrollTop < target
+          ? reversedScrollTop + this.scrollValues.clientHeight
+          : reversedScrollTop - this.scrollValues.clientHeight;
     } else {
       this.scrollerElement.scrollTop =
         this.scrollValues.scrollTop < target
@@ -1311,7 +1362,8 @@ export default class Scrollbar extends React.Component<ScrollbarProps, Scrollbar
       this.scrollValues.clientWidth,
       trackInnerSize,
       thumbSize,
-      offset
+      offset,
+      this.props.reverseX
     );
 
     if (this.props.thumbXProps?.onDrag) {
@@ -1352,7 +1404,8 @@ export default class Scrollbar extends React.Component<ScrollbarProps, Scrollbar
       this.scrollValues.clientHeight,
       trackInnerSize,
       thumbSize,
-      offset
+      offset,
+      this.props.reverseY
     );
 
     if (this.props.thumbYProps?.onDrag) {
